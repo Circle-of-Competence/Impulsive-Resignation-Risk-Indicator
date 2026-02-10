@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 裸辞检测器 | 多巴胺扎心版 (25题完整版)</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            /* 多巴胺配色方案 (Dopamine / Neo-Brutalism) */
+            --bg-color: #FFDEE9;
+            --bg-gradient: linear-gradient(0deg, #FFDEE9 0%, #B5FFFC 100%);
+            
+            --card-bg: #FFFFFF;
+            --border-color: #000000;
+            
+            /* 鲜艳色块 */
+            --color-yellow: #FFEB3B; /* 柠檬黄 */
+            --color-pink: #FF0080;   /* 火龙果色 */
+            --color-blue: #00E5FF;   /* 电光蓝 */
+            --color-purple: #7B61FF; /* 葡萄紫 */
+            --color-green: #00E676;  /* 荧光绿 */
+            --color-red: #FF3D00;    /* 警示红 */
+
+            --shadow-hard: 6px 6px 0px #000000; /* 硬阴影 */
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', 'PingFang SC', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            background-image: var(--bg-gradient);
+            background-attachment: fixed;
+            color: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            padding-top: 80px; /* 为顶部栏留空 */
+        }
+
+        /* 顶部显眼包打赏栏 */
+        .reward-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #000;
+            color: #FFF;
+            padding: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .reward-btn-pulse {
+            background: var(--color-green);
+            color: #000;
+            border: 2px solid #FFF;
+            padding: 6px 18px;
+            border-radius: 50px;
+            margin-left: 15px;
+            font-weight: 900;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--color-green);
+            animation: pulse 1.5s infinite; /* 呼吸动画 */
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(0, 230, 118, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 230, 118, 0); }
+        }
+
+        .container { width: 100%; max-width: 600px; margin-bottom: 40px; }
+
+        /* 波普风格卡片 */
+        .card {
+            background: var(--card-bg);
+            border: 3px solid #000;
+            border-radius: var(--radius);
+            padding: 30px;
+            box-shadow: var(--shadow-hard);
+            transition: transform 0.2s;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        /* 标题与文本 */
+        h1 { font-size: 28px; font-weight: 900; text-align: center; margin-bottom: 15px; text-transform: uppercase; letter-spacing: -1px; transform: rotate(-1deg); }
+        .highlight { background: var(--color-yellow); padding: 0 5px; border: 2px solid #000; display: inline-block; transform: rotate(2deg); }
+        
+        .subtitle { font-size: 15px; font-weight: 600; text-align: center; margin-bottom: 30px; line-height: 1.6; border-bottom: 3px dashed #000; padding-bottom: 20px; }
+
+        .start-btn {
+            background-color: var(--color-pink);
+            color: #FFF;
+            border: 3px solid #000;
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: 900;
+            border-radius: 50px;
+            cursor: pointer;
+            display: block;
+            margin: 0 auto;
+            box-shadow: var(--shadow-hard);
+            transition: all 0.1s;
+        }
+        .start-btn:active { transform: translate(4px, 4px); box-shadow: none; }
+
+        /* 答题区 */
+        #quiz-card { display: none; }
+        .progress-container { width: 100%; height: 12px; background: #FFF; border: 3px solid #000; border-radius: 20px; margin-bottom: 25px; overflow: hidden; }
+        .progress-fill { height: 100%; background: repeating-linear-gradient(45deg, var(--color-blue), var(--color-blue) 10px, #4DD0E1 10px, #4DD0E1 20px); width: 0%; transition: width 0.3s; }
+
+        .question-tag { 
+            display: inline-block; padding: 6px 12px; border: 2px solid #000; 
+            font-weight: 900; font-size: 12px; margin-bottom: 15px; 
+            box-shadow: 2px 2px 0 #000; 
+        }
+        .tag-finance { background: var(--color-yellow); transform: rotate(-2deg); }
+        .tag-psych { background: var(--color-pink); color: #FFF; transform: rotate(1deg); }
+        .tag-market { background: var(--color-purple); color: #FFF; transform: rotate(-1deg); }
+
+        .question-text { font-size: 20px; font-weight: 800; margin-bottom: 25px; line-height: 1.4; }
+
+        .options-grid { display: grid; gap: 15px; }
+        .option-btn {
+            background: #FFF;
+            border: 3px solid #000;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: left;
+            box-shadow: 4px 4px 0 #EEE;
+            transition: all 0.1s;
+        }
+        .option-btn:hover { background: #F0F0F0; transform: translate(-2px, -2px); box-shadow: 6px 6px 0 #000; }
+        .option-btn:active { background: var(--color-blue); transform: translate(0, 0); box-shadow: none; }
+
+        /* 结果页 */
+        #result-card { display: none; text-align: center; }
+        .score-box { 
+            background: #000; color: var(--color-green); 
+            font-family: 'Courier New', monospace; font-size: 50px; font-weight: 900;
+            padding: 10px 30px; border-radius: 10px; display: inline-block; margin-bottom: 20px;
+            border: 4px solid var(--color-green);
+        }
+        
+        .result-title-box {
+            background: var(--color-purple); color: #FFF; border: 3px solid #000;
+            padding: 10px 20px; font-size: 20px; font-weight: 900; 
+            display: inline-block; margin-bottom: 20px; transform: rotate(-2deg);
+            box-shadow: 4px 4px 0 #000;
+        }
+
+        .result-content {
+            background: #FFF; border: 3px solid #000; padding: 20px;
+            text-align: left; line-height: 1.8; font-size: 15px; font-weight: 500;
+            margin-bottom: 30px; box-shadow: inset 4px 4px 0 #EEE;
+        }
+
+        /* 扎心弹窗 (Pop Art Style) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: grayscale(100%); }
+        
+        .modal-content { 
+            background: #FFF; border: 4px solid #000; width: 90%; max-width: 400px; padding: 0; 
+            box-shadow: 10px 10px 0 var(--color-pink); animation: shake 0.5s;
+        }
+        
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        .sting-header { background: var(--color-yellow); border-bottom: 4px solid #000; padding: 15px; font-size: 24px; font-weight: 900; text-transform: uppercase; }
+        .sting-body { padding: 25px; font-size: 16px; font-weight: 600; line-height: 1.6; }
+        .sting-btn { width: 100%; background: #000; color: #FFF; padding: 15px; font-size: 18px; font-weight: 900; border: none; cursor: pointer; text-transform: uppercase; }
+        .sting-btn:hover { background: var(--color-pink); color: #000; }
+
+        /* Veto 弹窗 */
+        .veto-content { box-shadow: 10px 10px 0 var(--color-red); }
+        .veto-header { background: var(--color-red); color: #FFF; }
+
+        /* 赞赏弹窗 */
+        .reward-modal-content { background: var(--color-green); text-align: center; padding: 30px; box-shadow: 10px 10px 0 #000; border: 4px solid #000; }
+        
+    </style>
+</head>
+<body>
+
+    <div class="reward-bar">
+        <span>🤑 觉得准？请开发者喝冰美式！</span>
+        <button class="reward-btn-pulse" onclick="openReward()">打赏 $$</button>
+    </div>
+
+    <div class="container">
+        <div id="intro-card" class="card">
+            <h1>2026 <span class="highlight">裸辞检测器</span><br>多巴胺扎心版</h1>
+            <p class="subtitle">
+                别喝鸡汤了，来点除草剂吧。<br>
+                基于“一票否决”与“全员恶人”算法。<br>
+                <strong>警告：每一个错误选项都会遭到系统无情的嘲讽。</strong>
+            </p>
+            <button class="start-btn" onclick="startQuiz()">GO! 开始检测</button>
+        </div>
+
+        <div id="quiz-card" class="card">
+            <div class="progress-container"><div class="progress-fill" id="progress-fill"></div></div>
+            <div id="question-tag" class="question-tag">TAG</div>
+            <div id="question-text" class="question-text">Question</div>
+            <div id="options-container" class="options-grid"></div>
+        </div>
+
+        <div id="result-card" class="card">
+            <h2 style="margin-bottom:10px; font-weight:900;">您的作死指数</h2>
+            <div class="score-box" id="final-score">0</div>
+            <br>
+            <div class="result-title-box" id="result-tag">标签</div>
+            <div class="result-content" id="result-desc">
+                </div>
+            <button class="start-btn" style="background:var(--color-green); color:#000; margin-bottom:15px;" onclick="openReward()">☕️ 必须打赏回血</button>
+            <button class="start-btn" style="background:#FFF; color:#000; font-size:16px;" onclick="location.reload()">🔄 不服？再测</button>
+        </div>
+    </div>
+
+    <div id="sting-modal" class="modal">
+        <div class="modal-content">
+            <div class="sting-header">⚠️ 暴击警告</div>
+            <div class="sting-body" id="sting-text">内容占位符</div>
+            <button class="sting-btn" onclick="closeSting()">好的，我错了</button>
+        </div>
+    </div>
+
+    <div id="veto-modal" class="modal">
+        <div class="modal-content veto-content">
+            <div class="sting-header veto-header">⛔️ 游戏结束 (GAME OVER)</div>
+            <div class="sting-body">
+                <p id="veto-reason" style="font-size:20px; margin-bottom:15px; font-weight:900;">原因</p>
+                <p>根据2026年生存法则，触碰此红线者，裸辞 = 送人头。</p>
+                <p style="font-size:14px; margin-top:10px; color:#666;">系统已拒绝继续为您服务，请回工位搬砖。</p>
+            </div>
+            <button class="sting-btn" style="background:var(--color-red); color:#FFF;" onclick="location.reload()">认输重开</button>
+        </div>
+    </div>
+
+    <div id="reward-modal" class="modal">
+        <div class="reward-modal-content">
+            <span style="position:absolute; right:15px; top:10px; font-size:30px; cursor:pointer; font-weight:900;" onclick="closeReward()">&times;</span>
+            <h2 style="font-weight:900; margin-bottom:20px;">给开发者加个鸡腿</h2>
+            <div style="width:220px; height:220px; background:#FFF; margin:0 auto 20px; display:flex; align-items:center; justify-content:center; border:3px solid #000; font-weight:bold; color:#CCC;">
+                此处放收款码<br>(微信/支付宝)
+            </div>
+            <p style="font-weight:bold;">您的支持 = 服务器电费 + 开发者生发水</p>
+        </div>
+    </div>
+
+    <script>
+        // ----------------------------------------------------
+        // 数据结构：25题完整版
+        // ----------------------------------------------------
+        const questions = [
+            // --- 经济防线 (Veto) ---
+            {
+                text: "Q1. [现金流] 摸摸口袋，如果不工作，存款能让你活多久？",
+                tag: "💰 经济维", type: "finance",
+                options: [
+                    { text: "< 3个月 (月光族)", score: 0, isVeto: true, vetoReason: "生存金不足3个月", stingText: "🤡 <strong>真的很幽默：</strong><br>你是在“裸奔”不是“裸辞”。<br>老板骂你的时候把头低点，毕竟下个月房租还没着落。" },
+                    { text: "3-6个月", score: 2 },
+                    { text: "6-12个月", score: 5 },
+                    { text: "> 12个月 (土豪)", score: 10 }
+                ]
+            },
+            {
+                text: "Q2. [负债] 你的每月还贷额（房/车/卡）占收入比例？",
+                tag: "💸 经济维", type: "finance",
+                options: [
+                    { text: "> 70% (高危)", score: -10, isVeto: true, vetoReason: "负债率过高(>70%)", stingText: "🏦 <strong>银行VIP警告：</strong><br>你的人身自由已经抵押给银行了。<br>断供一个月，征信黑名单见。想走？问过你的房贷经理了吗？" },
+                    { text: "50%-70%", score: -5 },
+                    { text: "20%-50%", score: 0 },
+                    { text: "无债一身轻", score: 5 }
+                ]
+            },
+            {
+                text: "Q3. [社保] 裸辞后，2025年的社保政策你搞得定吗？",
+                tag: "📜 政策维", type: "finance",
+                options: [
+                    { text: "断缴/无所谓", score: -10, isVeto: true, vetoReason: "忽视社保制度成本", stingText: "📉 <strong>法盲警告：</strong><br>2025年新规：断缴=买房资格清零+医保等待期。<br>生病不能报销的时候，你会流下悔恨的泪水（而且要自费擦泪）。" },
+                    { text: "不知道要交多少", score: -5, stingText: "⚠️ <strong>盲目自信：</strong><br>连“灵活就业”每月扣多少钱都没算过，就敢裸辞？<br>你这不是勇敢，是鲁莽。" },
+                    { text: "已安排代缴/预算", score: 5 }
+                ]
+            },
+            {
+                text: "Q4. [托底] 假如半年没工作，父母/伴侣能养你吗？",
+                tag: "🏠 家庭维", type: "finance",
+                options: [
+                    { text: "绝对没有", score: -5, stingText: "🥶 <strong>孤狼之死：</strong><br>没有存款，没有后援，没有收入。<br>你在玩一种很新的“极限生存”游戏。" },
+                    { text: "很难开口", score: 0 },
+                    { text: "家里有矿/支持", score: 8 }
+                ]
+            },
+            {
+                text: "Q5. [支出] 未来一年是否有结婚/装修等烧钱计划？",
+                tag: "💸 支出维", type: "finance",
+                options: [
+                    { text: "有，金额巨大", score: -5, stingText: "🔥 <strong>花式自焚：</strong><br>一边失业一边大额消费？<br>建议直接把钱烧了取暖，效率可能更高。" },
+                    { text: "可推迟/降级", score: 0 },
+                    { text: "无欲无求", score: 5 }
+                ]
+            },
+
+            // --- 心理损伤 (Psych) ---
+            {
+                text: "Q6. [晨起] 闹钟响了，想到要去公司，你的反应？",
+                tag: "🧠 心理维", type: "psych",
+                options: [
+                    { text: "正常起床", score: 0 },
+                    { text: "轻微拖延", score: 5 },
+                    { text: "恶心/想出车祸", score: 30, stingText: "🚑 <strong>求生欲下线：</strong><br>宁愿被车撞也不愿打卡？<br>你的工作正在谋杀你，赚的钱都不够住ICU的。" }
+                ]
+            },
+            {
+                text: "Q7. [下班] 下班回到家，你的状态？",
+                tag: "🔋 能量维", type: "psych",
+                options: [
+                    { text: "还有精力", score: 0 },
+                    { text: "只想躺尸", score: 5 },
+                    { text: "灵魂被抽干/哭泣", score: 25, stingText: "🪫 <strong>电池报废：</strong><br>你不是在工作，你是在被吸血。<br>这种状态持续下去，下一个猝死新闻的主角就是你。" }
+                ]
+            },
+            {
+                text: "Q8. [厌恶] 面对客户/同事，你的心态？",
+                tag: "😒 厌恶维", type: "psych",
+                options: [
+                    { text: "积极解决", score: 0 },
+                    { text: "莫得感情", score: 3 },
+                    { text: "觉得全是傻X", score: 10, stingText: "👹 <strong>恶龙凝视：</strong><br>你已经变成了你最讨厌的模样。<br>当你看谁都像傻X时，说明环境的毒性已经入脑了。" }
+                ]
+            },
+            {
+                text: "Q9. [PUA] 领导对你的态度？",
+                tag: "🤡 职场维", type: "psych",
+                options: [
+                    { text: "正常/肯定", score: 0 },
+                    { text: "画饼大师", score: 5 },
+                    { text: "持续贬低/羞辱", score: 20, stingText: "⛓ <strong>斯德哥尔摩：</strong><br>“你能力不行”、“全靠平台”...<br>这叫煤气灯效应（Gaslighting）。他在摧毁你的自信，好让你不敢跑。" }
+                ]
+            },
+            {
+                text: "Q10. [睡眠] 最近三个月的睡眠？",
+                tag: "💤 睡眠维", type: "psych",
+                options: [
+                    { text: "秒睡", score: 0 },
+                    { text: "报复性熬夜", score: 5 },
+                    { text: "长期失眠/噩梦", score: 25, stingText: "🧟 <strong>丧尸预警：</strong><br>连梦里都在改PPT？<br>资本家已经殖民了你的潜意识，你的神经系统正在崩溃边缘。" }
+                ]
+            },
+            {
+                text: "Q11. [身体] 体检报告有“战损”吗？",
+                tag: "🏥 健康维", type: "psych",
+                options: [
+                    { text: "健康", score: 0 },
+                    { text: "变胖/脱发", score: 10 },
+                    { text: "结节/增生/抑郁", score: 40, stingText: "💣 <strong>最后通牒：</strong><br>甲状腺结节、乳腺增生...这是身体在尖叫。<br>在这个公司，你是在用命换那点窝囊费。" }
+                ]
+            },
+            {
+                text: "Q12. [情绪] 是否有无法控制的爆发？",
+                tag: "🤬 情绪维", type: "psych",
+                options: [
+                    { text: "无", score: 0 },
+                    { text: "偶尔", score: 5 },
+                    { text: "频繁崩溃/易怒", score: 20, stingText: "🧨 <strong>行走的炸药：</strong><br>你现在的易燃程度堪比军火库。<br>如果不辞职，建议先咨询刑事律师，免得哪天真动手了。" }
+                ]
+            },
+            {
+                text: "Q13. [道德] 工作是否违背良知/底线？",
+                tag: "⚖️ 道德维", type: "psych",
+                options: [
+                    { text: "否", score: 0 },
+                    { text: "灰色地带", score: 5 },
+                    { text: "是，良心不安", score: 30, stingText: "😈 <strong>灵魂交易：</strong><br>为了那点工资出卖良知？<br>“道德损伤”比身体疲劳更难治愈，这种钱赚了也睡不踏实。" }
+                ]
+            },
+            {
+                text: "Q14. [入侵] 周末/深夜回消息的频率？",
+                tag: "🕰 时间维", type: "psych",
+                options: [
+                    { text: "几乎没有", score: 0 },
+                    { text: "偶尔", score: 2 },
+                    { text: "24h待命", score: 15, stingText: "🔗 <strong>电子奴隶：</strong><br>你没有下班，你只是换个地方回消息。<br>没有恢复期的工作，本质上就是一种慢性监禁。" }
+                ]
+            },
+
+            // --- 市场价值 (Market) ---
+            {
+                text: "Q15. [风口] 所在行业现状？",
+                tag: "📉 趋势维", type: "market",
+                options: [
+                    { text: "爆发期 (AI/出海)", score: 10 },
+                    { text: "平台期", score: 5 },
+                    { text: "衰退期 (地产/教培)", score: -5, stingText: "🚢 <strong>泰坦尼克号：</strong><br>船都沉了一半了，你还想裸泳？<br>在衰退行业裸辞，不仅是失业，是直接失踪。" }
+                ]
+            },
+            {
+                text: "Q16. [AI] 对AI工具掌握程度？",
+                tag: "🤖 技术维", type: "market",
+                options: [
+                    { text: "精通/融入工作流", score: 10 },
+                    { text: "会用一点", score: 2 },
+                    { text: "完全不会", score: -5, stingText: "🦕 <strong>活化石：</strong><br>2026年了还不会用AI？<br>应届生用AI效率比你高，工资比你低。你不是裸辞，你是被时代淘汰。" }
+                ]
+            },
+            {
+                text: "Q17. [年龄] 你的年龄与职级？",
+                tag: "🎂 年龄维", type: "market",
+                options: [
+                    { text: "< 30岁", score: 5 },
+                    { text: "30-35岁 骨干", score: 2 },
+                    { text: "> 35岁 非高管", score: -10, stingText: "👴 <strong>年龄红线：</strong><br>35岁+，没混上管理层，还敢裸辞？<br>HR看到你的简历只会想：这人是不是有什么大病？" }
+                ]
+            },
+            {
+                text: "Q18. [反馈] 现在投简历，市场反应？",
+                tag: "📢 反馈维", type: "market",
+                options: [
+                    { text: "猎头疯抢", score: 15 },
+                    { text: "有面试", score: 5 },
+                    { text: "石沉大海", score: -10, stingText: "❄️ <strong>凛冬将至：</strong><br>连面试都没有，说明你在市场上已经“隐形”了。<br>现在裸辞，就是从温室直接跳进冰窖。" }
+                ]
+            },
+            {
+                text: "Q19. [替代] 你的技能容易被替代吗？",
+                tag: "🛡 壁垒维", type: "market",
+                options: [
+                    { text: "极难/稀缺", score: 10 },
+                    { text: "需要培训", score: 2 },
+                    { text: "有手就行", score: -5, stingText: "🔩 <strong>标准NPC：</strong><br>培训一周就能上岗的工作，你有什么资格谈条件？<br>外面大把更便宜、更听话的年轻人等着顶你的位。" }
+                ]
+            },
+            {
+                text: "Q20. [副业] 有Plan B收入吗？",
+                tag: "🛶 备胎维", type: "market",
+                options: [
+                    { text: "覆盖房租", score: 10 },
+                    { text: "赚个咖啡钱", score: 2 },
+                    { text: "完全没有", score: 0, stingText: "🪑 <strong>独腿凳子：</strong><br>把所有鸡蛋放在一个篮子里，篮子还是漏的。<br>没有副业支撑的裸辞，就像不带氧气瓶潜水。" }
+                ]
+            },
+            {
+                text: "Q21. [时机] 现在的月份是？",
+                tag: "🗓 择时维", type: "market",
+                options: [
+                    { text: "3-4月 / 9-10月", score: 5 },
+                    { text: "5-8月", score: 0 },
+                    { text: "11月-次年2月", score: -5, stingText: "🧊 <strong>垃圾时间：</strong><br>年底HC锁死，大家都苟着拿年终奖。<br>你这时候冲出去，是想给HR拜早年吗？" }
+                ]
+            },
+            {
+                text: "Q22. [空窗] 行业对空窗期容忍度？",
+                tag: "👀 偏见维", type: "market",
+                options: [
+                    { text: "包容 (设计/技术)", score: 5 },
+                    { text: "一般", score: 0 },
+                    { text: "苛刻 (国企/金融)", score: -5, stingText: "🤨 <strong>有罪推定：</strong><br>在你的行业，空窗期=能力有问题。<br>超过3个月没工作，你的简历就会直接进碎纸机。" }
+                ]
+            },
+            {
+                text: "Q23. [学习] 裸辞期间有计划吗？",
+                tag: "📚 增值维", type: "market",
+                options: [
+                    { text: "已报名/付费学习", score: 5 },
+                    { text: "打算自学", score: 0 },
+                    { text: "只想躺平", score: -5, stingText: "🛌 <strong>家里蹲预备：</strong><br>“休息一下”通常是“废掉”的开始。<br>没有计划的裸辞，最后都会变成刷抖音度日，直到焦虑爆炸。" }
+                ]
+            },
+            {
+                text: "Q24. [薪资] 目前薪资水平？",
+                tag: "💰 锚点维", type: "market",
+                options: [
+                    { text: "显著低于市场", score: 5 },
+                    { text: "市场平均", score: 0 },
+                    { text: "显著高于市场", score: -5, stingText: "🔒 <strong>金手铐：</strong><br>拿着溢价工资还叫苦？<br>出去很难找到同等待遇了。承认吧，你现在的痛苦是高薪的“精神损失费”。" }
+                ]
+            },
+            {
+                text: "Q25. [直觉] 抛硬币决定，你希望是哪面？",
+                tag: "🔮 直觉维", type: "psych",
+                options: [
+                    { text: "辞职 (狂喜)", score: 20 },
+                    { text: "不舍", score: 0 },
+                    { text: "极度恐慌", score: -5, stingText: "😨 <strong>怂保平安：</strong><br>你的潜意识在尖叫“别跳”。<br>这种恐慌不是因为你胆小，是因为你穷。听直觉的，别送死。" }
+                ]
+            }
+        ];
+
+        let currentIdx = 0;
+        let scores = { finance: 0, psych: 0, market: 0 };
+        let pendingOption = null;
+
+        function startQuiz() {
+            document.getElementById('intro-card').style.display = 'none';
+            document.getElementById('quiz-card').style.display = 'block';
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = questions[currentIdx];
+            const progress = ((currentIdx) / questions.length) * 100;
+            document.getElementById('progress-fill').style.width = `${progress}%`;
+
+            const tagEl = document.getElementById('question-tag');
+            tagEl.textContent = q.tag;
+            tagEl.className = 'question-tag';
+            if (q.type === 'finance') tagEl.classList.add('tag-finance');
+            else if (q.type === 'psych') tagEl.classList.add('tag-psych');
+            else tagEl.classList.add('tag-market');
+
+            document.getElementById('question-text').textContent = q.text;
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt.text;
+                btn.onclick = () => handleAnswer(opt, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(opt, btn) {
+            fireConfetti(btn);
+            scores[questions[currentIdx].type] += opt.score;
+            
+            if (opt.stingText) {
+                pendingOption = opt;
+                setTimeout(() => {
+                    document.getElementById('sting-text').innerHTML = opt.stingText;
+                    document.getElementById('sting-modal').style.display = 'flex';
+                }, 300);
+            } else {
+                nextQuestion();
+            }
+        }
+
+        function closeSting() {
+            document.getElementById('sting-modal').style.display = 'none';
+            if (pendingOption && pendingOption.isVeto) {
+                setTimeout(() => {
+                    document.getElementById('veto-reason').textContent = pendingOption.vetoReason;
+                    document.getElementById('veto-modal').style.display = 'flex';
+                }, 300);
+            } else {
+                pendingOption = null;
+                nextQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            currentIdx++;
+            if (currentIdx < questions.length) {
+                setTimeout(renderQuestion, 300);
+            } else {
+                setTimeout(showResult, 300);
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quiz-card').style.display = 'none';
+            document.getElementById('result-card').style.display = 'block';
+
+            const totalScore = scores.finance + scores.market + scores.psych;
+            
+            const scoreEl = document.getElementById('final-score');
+            let temp = 0;
+            const timer = setInterval(() => {
+                temp += 2;
+                scoreEl.textContent = temp;
+                if (temp >= totalScore) {
+                    scoreEl.textContent = totalScore;
+                    clearInterval(timer);
+                }
+            }, 20);
+
+            const resultTag = document.getElementById('result-tag');
+            const descEl = document.getElementById('result-desc');
+
+            let content = "";
+            let tag = "";
+
+            // 算法判定阈值调整（适配25题总分）
+            if (scores.finance < 10 && scores.psych > 60) {
+                tag = "☠️ 绝地求生 (SURVIVAL MODE)";
+                content = `
+                    <p><strong>结局很扎心：你在出卖灵魂，却连赎身的钱都没攒够。</strong></p>
+                    <p>你的数据极其分裂：心理分爆表（想死），经济分触底（没钱）。现在工作对你来说就是慢性刑罚。但你不能裸辞，因为那是自杀。</p>
+                    <p><strong>行动指南：</strong></p>
+                    <p>1. <strong>防御性上班：</strong>收起责任感，只做分内事，拒绝内耗。<br>2. <strong>带薪养病：</strong>去医院开证明，休病假是你唯一的合法回血方式。<br>3. <strong>极简生存：</strong>攒够逃生金再跑。</p>
+                `;
+            } else if (totalScore < 80) {
+                tag = "🐸 温水青蛙 (THE FROG)";
+                content = `
+                    <p><strong>真相是：你不敢辞职，不完全是因为穷，是因为“怂”。</strong></p>
+                    <p>你的痛苦不够深，能力也不够强。你正处于“间歇性踌躇满志，持续性混吃等死”的叠加态。现在裸辞，就是从一个坑跳进另一个坑。</p>
+                    <p><strong>行动指南：</strong></p>
+                    <p>别抱怨了，把公司当学校。利用摸鱼时间考证、学AI。当猎头开始骚扰你时，才是你甩辞职信的时候。现在，<strong>苟住</strong>。</p>
+                `;
+            } else if (scores.finance > 30 && scores.psych < 50) {
+                tag = "🔒 金手铐 (GOLDEN HANDCUFFS)";
+                content = `
+                    <p><strong>承认吧，你根本不想辞职，你只是想凡尔赛。</strong></p>
+                    <p>你的工作性价比极高。也许无聊，但薪水足以让你支付高昂的生活费。你不是想辞职，你是贪婪——既要钱多，又要爽。</p>
+                    <p><strong>行动指南：</strong></p>
+                    <p>既然选择了安逸，就接受平庸。把工作当提款机，发展个副业吧。别折腾了，外面很冷的。</p>
+                `;
+            } else if (totalScore > 150) {
+                tag = "🚀 自由飞翔 (READY TO FLY)";
+                content = `
+                    <p><strong>恭喜！你已经完成了自我救赎的原始积累。</strong></p>
+                    <p>你有Fuck You Money，你有硬技能，你的身体在尖叫“我要自由”。现在的公司就是阻碍你飞升的绊脚石。</p>
+                    <p><strong>行动指南：</strong></p>
+                    <p>别犹豫，犹豫就是对生命的不尊重。清空电脑，打印辞职信，<strong>快跑！</strong>去旅行，去重启，去过你该过的人生。</p>
+                `;
+            } else {
+                tag = "🐴 骑驴找马 (WAIT & SEE)";
+                content = `
+                    <p><strong>薛定谔的离职：想走钱不够，想留气不顺。</strong></p>
+                    <p>这是大多数人的常态。你拥有最大的策略空间。</p>
+                    <p><strong>行动指南：</strong></p>
+                    <p>制定90天逃跑计划。第一个月存钱，第二个月刷简历。不要因为被骂就冲动，要因为“找到了路”而离开。</p>
+                `;
+            }
+
+            resultTag.textContent = tag;
+            descEl.innerHTML = content;
+        }
+
+        function fireConfetti(el) {
+            const rect = el.getBoundingClientRect();
+            const x = (rect.left + rect.width / 2) / window.innerWidth;
+            const y = (rect.top + rect.height / 2) / window.innerHeight;
+            confetti({ 
+                particleCount: 60, spread: 80, origin: { x, y }, 
+                colors: ['#FFEB3B', '#FF0080', '#00E5FF', '#7B61FF'], 
+                disableForReducedMotion: true 
+            });
+        }
+
+        function openReward() { document.getElementById('reward-modal').style.display = 'flex'; }
+        function closeReward() { document.getElementById('reward-modal').style.display = 'none'; }
+        window.onclick = function(e) { if(e.target.className === 'modal') e.target.style.display = 'none'; }
+    </script>
+</body>
+</html>
